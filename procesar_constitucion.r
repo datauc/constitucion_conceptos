@@ -1,11 +1,9 @@
 library(tidytext)
-#library(readtext)
-#library(pdftools)
 library(readr)
 library(dplyr)
 library(ggplot2)
 
-#descargar pdf
+#descargar pdf, de ser necesario
 #download.file("https://www.oas.org/dil/esp/Constitucion_Chile.pdf",
 #              "constitucion.pdf")
 
@@ -14,6 +12,7 @@ texto <- pdftools::pdf_text("constitucion.pdf")
 
 
 #importar stopwords ----
+# descargarlas
 # stopwords <- readtext::readtext("https://raw.githubusercontent.com/stopwords-iso/stopwords-es/master/stopwords-es.txt") %>%
 #   unnest_tokens(palabra, text) %>% 
 #   tibble() %>%
@@ -21,28 +20,36 @@ texto <- pdftools::pdf_text("constitucion.pdf")
 #   filter(nchar(palabra) > 1) %>% 
 #   pull()
 
+#cargar
 load("stopwords.Rdata")
 
+
+
 #constitución por líneas ----
+#procesa la constitución para producir un data frame que contenga las líneas del pdf y también cada palabra en cada línea
 constitucion <- texto %>%
+  #convertir a un data frame tipo tibble (por comodidad)
   tibble() %>%
+  #generar número de cada párrafo (vienen del pdf)
   mutate(n_parrafo = 1:n()) %>%
   rename(caja = 1) %>%
+  #desarmar el texto en líneas
   unnest_tokens(linea, caja, 
-                token = "regex", pattern = "\n", to_lower = FALSE) %>% #cortar párrafos por línea
-  mutate(n_linea = 1:n()) %>%
-  mutate(linea = stringr::str_trim(linea)) %>%
-  #recortar índice al inicio inicial e índice analítico al final
+                token = "regex", pattern = "\n", #separar palabras en los espacios
+                to_lower = FALSE) %>% #sin tirar a minúsculas
+  mutate(n_linea = 1:n()) %>% #crear número de cada línea
+  mutate(linea = stringr::str_trim(linea)) %>% #borrar espacios al principio de las líneas
+  #recortar índice al inicio, e índice analítico al final, para no considerarlos
   filter(n_linea >= 48) %>% #título de la constitución
   filter(n_linea < 2903) %>% #título del índice analítico
   mutate(n_linea = 1:n()) %>% #rehacer líneas
-  #palabras
+  #desarmar las líneas en palabras
   unnest_tokens(input = linea, 
                 output = palabra,
                 token = "words", to_lower = FALSE, drop = FALSE) %>%
   group_by(n_linea) %>%
   mutate(n_palabra = 1:n()) %>% #numero de palabra en cada línea
-  #marcar capítulos
+  #detectar y marcar capítulos
   ungroup() %>%
   mutate(linea_capitulo = case_when(palabra %in% c("CAPITULO", "CAPÍTULO") ~ n_linea)) %>% #detectar palabras
   tidyr::fill(linea_capitulo) %>% #rellenar datos hacia abajo
@@ -50,9 +57,10 @@ constitucion <- texto %>%
   mutate(linea_capitulo = tidyr::replace_na(linea_capitulo, 1)) %>% #capítulo 0 son las líneas antes del capítulo 1
   #líneas inversas y escala horizontal
   ungroup() %>%
-  mutate(n_linea_rev = max(n_linea)-n_linea) %>% #orden de línea inverso para eje y
+  mutate(n_linea_rev = max(n_linea)-n_linea) %>% #orden de línea inverso para eje y (la primera línea es el máximo, y la última línea es 1, cosa que al graficar el "texto" se vea en orden de arriba hacia abajo
   group_by(n_linea) %>%
-  mutate(n_palabra_escala = (n_palabra - min(n_palabra) ) / (max(n_palabra) - min(n_palabra) ), #aplicar escala a la posición de palabra
+  #aplicar escala a la posición de palabra, para "justificar" los puntos igual como se haría en Word
+  mutate(n_palabra_escala = (n_palabra - min(n_palabra) ) / (max(n_palabra) - min(n_palabra) ), 
          n_palabra_escala = replace(n_palabra_escala, is.na(n_palabra_escala), 0.1),
          n_palabra_escala = replace(n_palabra_escala, n_palabra_escala==0, 0.03),
          n_palabra_escala = replace(n_palabra_escala, n_palabra_escala==1, 0.97)) %>%

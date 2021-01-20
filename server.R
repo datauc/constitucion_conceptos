@@ -27,20 +27,27 @@ shinyServer(function(input, output) {
       #graficar
       ggplot(aes(n_palabra_escala, y = n_linea_rev)) +
       #capa de abajo
-      geom_jitter(data = . %>% filter(palabras_clave == "Otros"), 
+      geom_jitter(data = . %>% filter(palabras_clave == "Otros"),
                   # aes(size = palabras_alpha,
-                  #      alpha = palabras_alpha), 
+                  #      alpha = palabras_alpha),
                   color = "gray70",
                   alpha=0.1,
                   size = 1.5,
                   height = 0, width=0.02) +
       #capa de arriba
-      geom_jitter(data = . %>% filter(palabras_clave != "Otros"), aes(color = palabras_clave),
+      geom_jitter_interactive(data = . %>% filter(palabras_clave != "Otros"), 
+                              aes(tooltip = paste(
+                                "Palabra:", palabra, "\n",
+                                "Capítulo:", linea_capitulo,  "\n",
+                                "Línea:", n_linea, "\n",
+                                "Contexto:", stringr::str_wrap(linea_contexto, 50)
+                                ),
+                                  color = palabras_clave),
                   #size = nchar(palabra),
                   #size = palabras_alpha,
                   #alpha = palabras_alpha), 
                   alpha = 1,
-                  size = 3,
+                  size = 4,
                   height = 0, width=0.02) +
       facet_wrap(~linea_capitulo, ncol = 1, scales="free",
                  strip.position = "left") +
@@ -59,7 +66,7 @@ shinyServer(function(input, output) {
     #output girafe ----
     girafe(ggobj = p,
            pointsize = 12,
-           width_svg =10, height_svg = 7,
+           width_svg = 10, height_svg = 7,
            fonts = list(sans = "Open Sans"),
            options = list(
              opts_sizing(rescale = FALSE, width = 1),

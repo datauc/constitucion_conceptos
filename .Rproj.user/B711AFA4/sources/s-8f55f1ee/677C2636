@@ -3,22 +3,22 @@
     "path": "~/Constitucion/constitucion_conceptos/server.R",
     "project_path": "server.R",
     "type": "r_source",
-    "hash": "3138700673",
+    "hash": "3012081151",
     "contents": "",
     "dirty": false,
     "created": 1611161002714.0,
     "source_on_save": false,
     "relative_order": 1,
     "properties": {
-        "cursorPosition": "33,27",
-        "scrollLine": "26"
+        "cursorPosition": "35,43",
+        "scrollLine": "22"
     },
     "folds": "",
-    "lastKnownWriteTime": 1611161019,
+    "lastKnownWriteTime": 1611162476,
     "encoding": "UTF-8",
     "collab_server": "",
     "source_window": "",
-    "last_content_update": 1611161019537,
+    "last_content_update": 1611162476678,
     "read_only": false,
     "read_only_alternatives": []
 }
